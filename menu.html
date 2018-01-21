@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8">
+    <style>
+       #map {
+        height: 700px;
+        width: 75%;
+       }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css"/>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+    
+    <script src="https://cdn.plot.ly/plotly-1.2.0.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  </head>
+  <body>
+    <h3>ACTIVATE</h3>
+    <div style="width: 100%; overflow: hidden; text-align: center;">
+    <div style="width: 300px; float: left;">
+    
+    <input type="text" id="datepicker" placeholder="Date">
+    <br/>
+    <br/>
+    <button class="ui button">Report</button> <br/>
+    <div id="graph1" style="width: 200px; height: 200px"></div>
+    <br/>
+    <div id="graph2" style="width: 200px; height: 200px"></div>
+    <br/>
+    <div id="graph3" style="width: 200px; height: 200px"></div>
+    </div>
+    <div style="margin-left: 300px;" id="map"></div>
+    </div>
+    <input id="searchBox" class="controls" type="text">
+    <script>
+            function initMap() {
+                var map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 18,
+                    center: {lat: 37.419347, lng: -122.079975},
+                    mapTypeId: 'terrain'
+                });
+                
+                var areaCoords = [ 
+                    {lat: 37.419347, lng: -122.079975},
+                    {lat: 37.418427, lng: -122.079975},
+                    {lat: 37.418427, lng: -122.079522},
+                    {lat: 37.419347, lng: -122.079522},
+                    {lat: 37.419347, lng: -122.079975}
+                ];
+
+                var area = new google.maps.Polygon({
+                    paths: areaCoords,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35
+                });
+                area.setMap(map);
+                
+                var areaBounds = new google.maps.LatLngBounds();
+                for (i = 0; i < areaCoords.length; i++) {
+                    areaBounds.extend(areaCoords[i]);
+                }
+                
+                var overlay = new google.maps.OverlayView();
+                overlay.draw = function() {};
+                overlay.setMap(map);
+                floatMenuVisible = false; //no var
+                
+                area.addListener('click', function(){
+                    //map.setZoom(8);
+                    map.setCenter(areaBounds.getCenter());
+                    drawGraph4();
+                    floatMenuVisible = true;
+                    var pos = overlay.getProjection().fromLatLngToContainerPixel(areaBounds.getCenter()); 
+                    moveFloatMenu(pos.x,pos.y);
+                });
+                
+                area.addListener('mouseover', function(){
+                    area.setOptions({fillColor : "#7FFF00"});
+                });
+                
+                area.addListener('mouseout', function(){
+                    area.setOptions({fillColor : "#FF0000"});
+                });
+                
+                map.addListener('center_changed', function() {
+                    if (floatMenuVisible){
+                        var pos = overlay.getProjection().fromLatLngToContainerPixel(areaBounds.getCenter()); 
+                        moveFloatMenu(pos.x,pos.y);
+                    }
+                });
+                
+                var sbelement = $('#searchBox')[0];
+                var searchBox = new google.maps.places.SearchBox(sbelement);
+                map.controls[google.maps.ControlPosition.TOP_LEFT].push(sbelement);
+
+            }
+            
+            function drawGraph4(){
+                var trace1 = {
+                    x:['15s', '32r', '78f'],
+                    y: [70, 57, 30],
+                    type: 'bar',
+                    name: 'Place'
+                };
+
+                var trace2 = {
+                    x:['80z', '24x', '67y'],
+                    y: [15, 74, 36],
+                    type: 'bar',
+                    name: 'Holder'
+                };
+
+                var data = [trace1, trace2];
+                var layout = {
+                    title: '',
+                    showlegend: false,
+                    autosize: false,
+                    width: 150,
+                    height: 100,
+                    margin: {
+                    l: 25,
+                    r: 15,
+                    b: 20,
+                    t: 20,
+                    pad: 4
+                }};
+                Plotly.newPlot('graph4', data, layout, {displayModeBar: false});
+            }
+            
+            function moveFloatMenu(x,y){
+                $("#floatMenu").css({"position": "absolute", "top": y + 'px', "left": x + 'px', "visibility": "visible"});
+            }
+            
+            function hideFloatMenu(){
+                $("#floatMenu").css({"visibility":"hidden"});
+                floatMenuVisible=false;
+                $("#graph4").empty();
+            }
+    </script>
+    <script type="text/javascript" src="scriptGraph.js"></script>
+
+    <script>
+    $( function() {
+     $( "#datepicker" ).datepicker();
+    } );
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQXlcXB_AS5sYV7BmeqFNaYWH0etwKfks&callback=initMap&libraries=places">
+    </script>
+    <div id=floatMenu style="border-style: solid; visibility: hidden;">
+        SQF <input type=text></input><br>
+        Capacity <input type=text></input><br>
+        Status <input type=text></input><br>
+        Occupied <input type=text></input><br>
+        <div id="graph4" style="width: 150px; height: 100px"></div>
+        <button type="button" onclick="hideFloatMenu()">X</button> 
+    </div>
+  </body>
+</html>
